@@ -1,24 +1,60 @@
+const w = 400;
+const h = 400;
+let scale = 1;
+let xOffset = 0;
+let yOffset = 0;
+let scaleSlider;
+let xOffsetSlider;
+let yOffsetSlider;
+let img;
+let d = 0;
+let factor = 2;
 function setup() {
-  const w = 1000;
-  const h = 1000;
-  createCanvas(w, h);
-  let img = createImage(w, h);
+  cnv = createCanvas(w, h);
+  img = createImage(w, h);
+  cnv.mouseWheel(() => {
+    if (event.deltaY > 0) {
+      if (factor < 2) {
+        factor = factor + factor;
+      }
+    } else {
+      factor = factor - factor / 2;
+    }
+    console.log(factor);
+    drawMandelBrot();
+  });
+  drawMandelBrot();
+}
+
+function drawMandelBrot() {
   img.loadPixels();
   for (let i = 0; i <= w; i++) {
     for (let j = 0; j <= h; j++) {
-      const x = map(i, 0, w, -2, 2);
-      const y = map(j, 0, h, -2, 2);
-      const [inMandelbrot, abs] = isCoordinateInMandelbrot(x, y);
+      const x = map(i, 0, w, -factor, factor);
+      const y = map(j, 0, h, -factor, factor);
+      const [inMandelbrot, _, iterations] = isCoordinateInMandelbrot(x, y);
       if (inMandelbrot) {
-        img.set(i, j, color(map(abs, 0, 3, 0, 255)));
+        img.set(i, j, color(map(iterations, 0, 100, 0, 255)));
+      } else {
+        img.set(i, j, color(0));
+      }
+      if (x === 1 && y === 1) {
+        img.set(i, j, color(40, 40, 40));
+      }
+      if (y === 0) {
+        img.set(i, j, color(0, 255, 255));
+      }
+      if (x === 0) {
+        img.set(i, j, color(0, 255, 255));
       }
     }
   }
   img.updatePixels();
-  image(img, 0, 0);
 }
 
-function draw() {}
+function draw() {
+  image(img, 0, 0);
+}
 
 const iterations = 100;
 function isCoordinateInMandelbrot(x, y) {
@@ -30,10 +66,10 @@ function isCoordinateInMandelbrot(x, y) {
     const newZy = 2 * zX * zY + y;
     zX = newZx;
     zY = newZy;
-    abs = sqrt(zX * zX + zY * zY);
-    if (abs > 2) {
-      return [false, abs];
+    abs = zX * zX + zY * zY;
+    if (abs > 2 * 2) {
+      return [false, abs, i];
     }
   }
-  return [true, abs];
+  return [true, abs, 100];
 }
